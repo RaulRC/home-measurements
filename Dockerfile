@@ -1,20 +1,31 @@
 # Use an official Python runtime as a parent image
-FROM python:3.8-slim
+FROM python:3.10.11-slim-buster
+RUN apt-get update
 
 # Set the working directory to /app
-WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+# Create a non-root user
+RUN useradd --create-home appuser
+WORKDIR /home/appuser
 
-# Install any needed packages
-RUN pip install poetry && poetry config virtualenvs.create false && poetry install --no-dev
+RUN mkdir -p /app/src
 
-# Make port 80 available to the world outside this container
 EXPOSE 8000
 
-# Define environment variable
-ENV NAME World
+# Copy the current directory contents into the container at /app
+COPY pyproject.toml /app
+COPY src /app/src
 
+WORKDIR /app
+
+# Install any needed packages
+ENV PYTHONPATH=${PYTHONPATH}:${PWD}
+RUN pip3 install poetry
+RUN poetry config virtualenvs.create false
+RUN poetry install --only main
+
+USER appuser
+
+CMD  poetry run uvicorn src.api.api_handler:app --host 0.0.0.0 --port 8000
 # Run app.py when the container launches
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
