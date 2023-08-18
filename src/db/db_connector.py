@@ -14,6 +14,11 @@ class DB:
     def __init__(self):
         self._connect()
 
+    def get_measurements(self):
+        # Fetch all measurements from the database
+        query = "SELECT * FROM measurements"
+        return self._execute(query)
+
     def store_measurement(self, data):
         # Insert data into the database
         insert_query = (
