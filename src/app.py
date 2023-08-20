@@ -51,22 +51,43 @@ graph = st.sidebar.selectbox(
     ("Line", "Dot")
 )
 func = px.line if graph == "Line" else px.scatter
-with tab1:
-    st.subheader("Basement")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.plotly_chart(plot_ts_value(df[df['room'] == 'basement'].sort_values(by='timestamp'),
-                                      value='humidity',
-                                      func=func))
-        st.plotly_chart(plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), value='humidity'))
-        st.subheader("Last 60 measurements")
-        st.write(df.tail(60).reset_index()[MAIN_COLS])
-    with col2:
-        st.plotly_chart(plot_ts_value(df[df['room'] == 'basement'].sort_values(by='timestamp'),
-                                      value='temperature',
-                                      func=func))
-        st.plotly_chart(plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), value='temperature'))
-with tab2:
-    "There's no data yet! : D"
-with tab3:
-    "There's no data yet! : D"
+
+init_date = st.sidebar.date_input('Initial date', value=df['timestamp'].min())
+end_date = st.sidebar.date_input('End date', value=df['timestamp'].max())
+
+if end_date < init_date:
+    st.sidebar.error('Error: End date must fall after initial date.')
+
+df = df[(df['timestamp'].dt.date >= init_date) & (df['timestamp'].dt.date < end_date + pd.Timedelta(days=1))]
+
+if len(df) == 0:
+    st.error('Error: No data available for selected dates.')
+else:
+    with tab1:
+        st.subheader("Basement")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(plot_ts_value(df[df['room'] == 'basement'].sort_values(by='timestamp'),
+                                          value='humidity',
+                                          func=func))
+            st.plotly_chart(plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), value='humidity'))
+            st.subheader("Last 60 measurements")
+            st.write(df.tail(60).reset_index()[MAIN_COLS])
+        with col2:
+            st.plotly_chart(plot_ts_value(df[df['room'] == 'basement'].sort_values(by='timestamp'),
+                                          value='temperature',
+                                          func=func))
+            st.plotly_chart(plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), value='temperature'))
+            st.subheader(f"Max temp")
+            st.write(df.loc[[df['temperature'].idxmax()]][['timestamp', 'temperature', 'humidity']])
+            st.subheader(f"Min temp")
+            st.write(df.loc[[df['temperature'].idxmin()]][['timestamp', 'temperature', 'humidity']])
+            st.subheader(f"Max humidity")
+            st.write(df.loc[[df['humidity'].idxmax()]][['timestamp', 'temperature', 'humidity']])
+            st.subheader(f"Min humidity")
+            st.write(df.loc[[df['humidity'].idxmin()]][['timestamp', 'temperature', 'humidity']])
+
+    with tab2:
+        "There's no data yet! : D"
+    with tab3:
+        "There's no data yet! : D"
