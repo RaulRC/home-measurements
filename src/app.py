@@ -1,5 +1,7 @@
 import streamlit as st
 import plotly.express as px
+import plotly.graph_objects as go
+
 import pandas as pd
 import random
 
@@ -22,7 +24,7 @@ st.subheader("Temperature and humidity")
 
 measurements = db.get_measurements()
 
-MAIN_COLS = ['place', 'room', 'timestamp', 'temperature', 'humidity', ]
+MAIN_COLS = ['timestamp', 'temperature', 'humidity', ]
 
 df = pd.DataFrame(measurements, columns=['id', 'place', 'room', 'timestamp', 'temperature', 'humidity', 'created_at'])
 
@@ -36,13 +38,19 @@ def get_random_colors():
 
 
 def plot_ts_value(df, value='temperature', func=px.line):
-    fig = func(df, x='timestamp', y=value, color='room', title=value, color_discrete_sequence=get_random_colors())
-    # fig.update_xaxes(rangeslider_visible=True)
+    if type(value) == str:
+        fig = func(df, x='timestamp', y=value, color='room', title=value, color_discrete_sequence=get_random_colors())
+    elif type(value) == list:
+        fig = func(df, x='timestamp', y=df[value], color='room', title=value,
+                   color_discrete_sequence=get_random_colors())
+
+    fig.update_layout(autosize=True)
     return fig
 
 
 def plot_box_value(df, value='temperature'):
     fig = px.box(df, color='room', y=value, title=value, color_discrete_sequence=get_random_colors())
+    fig.update_layout(autosize=True)
     return fig
 
 
@@ -52,7 +60,7 @@ graph = st.sidebar.selectbox(
 )
 func = px.line if graph == "Line" else px.scatter
 
-init_date = st.sidebar.date_input('Initial date', value=df['timestamp'].min())
+init_date = st.sidebar.date_input('Initial date', value=df['timestamp'].max())
 end_date = st.sidebar.date_input('End date', value=df['timestamp'].max())
 
 if end_date < init_date:
@@ -65,6 +73,19 @@ if len(df) == 0:
 else:
     with tab1:
         st.subheader("Basement")
+
+        fig = func(df.reset_index(),
+                   x='timestamp',
+                   y=["humidity", "temperature"],
+                   color_discrete_sequence=get_random_colors(),
+                   )
+        fig.update_layout(
+            autosize=False,
+            height=400,
+            width=900,
+        )
+        st.plotly_chart(fig)
+
         col1, col2 = st.columns(2)
         with col1:
             st.plotly_chart(plot_ts_value(df[df['room'] == 'basement'].sort_values(by='timestamp'),
@@ -77,15 +98,19 @@ else:
             st.plotly_chart(plot_ts_value(df[df['room'] == 'basement'].sort_values(by='timestamp'),
                                           value='temperature',
                                           func=func))
-            st.plotly_chart(plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), value='temperature'))
-            st.subheader(f"Max temp")
-            st.write(df.loc[[df['temperature'].idxmax()]][['timestamp', 'temperature', 'humidity']])
-            st.subheader(f"Min temp")
-            st.write(df.loc[[df['temperature'].idxmin()]][['timestamp', 'temperature', 'humidity']])
-            st.subheader(f"Max humidity")
-            st.write(df.loc[[df['humidity'].idxmax()]][['timestamp', 'temperature', 'humidity']])
-            st.subheader(f"Min humidity")
-            st.write(df.loc[[df['humidity'].idxmin()]][['timestamp', 'temperature', 'humidity']])
+            st.plotly_chart(
+                plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), value='temperature'))
+            st.subheader(f"Stats")
+            stats = pd.concat([
+                df.loc[[df['temperature'].idxmax()]][['timestamp', 'temperature', 'humidity']],
+                df.loc[[df['temperature'].idxmin()]][['timestamp', 'temperature', 'humidity']],
+                df.loc[[df['humidity'].idxmax()]][['timestamp', 'temperature', 'humidity']],
+                df.loc[[df['humidity'].idxmin()]][['timestamp', 'temperature', 'humidity']]]
+            )
+            stats['stat'] = ['Max temp', 'Min temp', 'Max humidity', 'Min humidity']
+            st.write(stats[
+                         ['stat', 'timestamp', 'temperature', 'humidity']
+                     ].reset_index().drop(columns=['index']).set_index('stat'))
 
     with tab2:
         "There's no data yet! : D"
