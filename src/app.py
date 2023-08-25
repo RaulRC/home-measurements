@@ -1,3 +1,5 @@
+import pdb
+
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
@@ -44,6 +46,9 @@ def plot_ts_value(df, value='temperature', func=px.line):
         fig = func(df, x='timestamp', y=df[value], color='room', title=value,
                    color_discrete_sequence=get_random_colors())
 
+    for line in df[(df['timestamp'].dt.hour == 0) & (df['timestamp'].dt.minute == 0)].index:
+        fig.add_vline(x=df.loc[line]['timestamp'], line_width=1, line_dash="dash", line_color="green")
+
     fig.update_layout(autosize=True)
     return fig
 
@@ -79,6 +84,14 @@ else:
                    y=["humidity", "temperature"],
                    color_discrete_sequence=get_random_colors(),
                    )
+        # Plot vertical lines in 00:00 hours
+
+        for line in df[(df['timestamp'].dt.hour == 0) & (df['timestamp'].dt.minute == 0)].index:
+            fig.add_vline(x=df.loc[line]['timestamp'], line_width=1, line_dash="dash", line_color="green")
+
+#        for x in df[(df['timestamp'].dt.hour == 0) &
+#              (df['timestamp'].dt.minute == 0)]:
+#            fig.add_vline(x=x.index, line_width=3, line_dash="dash", line_color="green")
         fig.update_layout(
             autosize=False,
             height=400,
