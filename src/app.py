@@ -49,6 +49,8 @@ def plot_ts_value(df, value='temperature', func=px.line):
     for line in df[(df['timestamp'].dt.hour == 0) & (df['timestamp'].dt.minute == 0)].index:
         fig.add_vline(x=df.loc[line]['timestamp'], line_width=1, line_dash="dash", line_color="green")
 
+    if value == 'temperature':
+        fig.update_layout(yaxis_range=[15, 35])
     fig.update_layout(autosize=True)
     return fig
 
@@ -61,7 +63,7 @@ def plot_box_value(df, value='temperature'):
 
 graph = st.sidebar.selectbox(
     "Graph type",
-    ("Line", "Dot")
+    ("Dot", "Line")
 )
 func = px.line if graph == "Line" else px.scatter
 
