@@ -82,15 +82,13 @@ if end_date < init_date:
 
 df = df[(df['timestamp'].dt.date >= init_date) & (df['timestamp'].dt.date < end_date + pd.Timedelta(days=1))]
 
-if len(df) == 0:
-    st.error('Error: No data available for selected dates.')
-else:
-    with tab1:
-        st.subheader("Basement")
-        fig = func(df.reset_index(),
+def show_data(room):
+    st.subheader(room.capitalize())
+    if df[df['room'] == room].shape[0] > 0:
+        fig = func(df[df['room'] == room].reset_index(),
                    x='timestamp',
                    y='value',
-                   color = 'key',
+                   color='key',
                    color_discrete_sequence=get_random_colors(),
                    )
         # Plot vertical lines in 00:00 hours
@@ -98,9 +96,9 @@ else:
         for line in df[(df['timestamp'].dt.hour == 0) & (df['timestamp'].dt.minute == 0)].index:
             fig.add_vline(x=df.loc[line]['timestamp'], line_width=1, line_dash="dash", line_color="green")
 
-#        for x in df[(df['timestamp'].dt.hour == 0) &
-#              (df['timestamp'].dt.minute == 0)]:
-#            fig.add_vline(x=x.index, line_width=3, line_dash="dash", line_color="green")
+        #        for x in df[(df['timestamp'].dt.hour == 0) &
+        #              (df['timestamp'].dt.minute == 0)]:
+        #            fig.add_vline(x=x.index, line_width=3, line_dash="dash", line_color="green")
         fig.update_layout(
             autosize=False,
             height=400,
@@ -110,33 +108,42 @@ else:
 
         col1, col2 = st.columns(2)
         with col1:
-            st.plotly_chart(plot_ts_value(df[df['room'] == 'basement'].sort_values(by='timestamp'),
+            st.plotly_chart(plot_ts_value(df[df['room'] == room].sort_values(by='timestamp'),
                                           key='humidity',
                                           func=func))
-            #st.plotly_chart(plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), key='humidity'))
+
             st.subheader("Last 60 measurements")
             st.write(df.tail(60).reset_index()[MAIN_COLS])
         with col2:
-            st.plotly_chart(plot_ts_value(df[df['room'] == 'basement'].sort_values(by='timestamp'),
+            st.plotly_chart(plot_ts_value(df[df['room'] == room].sort_values(by='timestamp'),
                                           key='temp',
                                           func=func))
 
-            st.plotly_chart(plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), key='temp'))
-            st.plotly_chart(plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), key='humidity'))
+            st.plotly_chart(plot_box_value(df[df['room'] == room].sort_values(by='timestamp'), key='temp'))
+            st.plotly_chart(plot_box_value(df[df['room'] == room].sort_values(by='timestamp'), key='humidity'))
 
             st.subheader(f"Stats")
             stats = pd.concat([
-                df.loc[[df[df['key'] == 'temp']['value'].idxmax()]][['timestamp', 'value']],
-                df.loc[[df[df['key'] == 'temp']['value'].idxmin()]][['timestamp', 'value']],
-                df.loc[[df[df['key'] == 'humidity']['value'].idxmax()]][['timestamp', 'value']],
-                df.loc[[df[df['key'] == 'humidity']['value'].idxmin()]][['timestamp', 'value']]]
+                df.loc[[df[(df['room'] == room) & (df['key'] == 'temp')]['value'].idxmax()]][['timestamp', 'value']],
+                df.loc[[df[(df['room'] == room) & (df['key'] == 'temp')]['value'].idxmin()]][['timestamp', 'value']],
+                df.loc[[df[(df['room'] == room) & (df['key'] == 'humidity')]['value'].idxmax()]][['timestamp', 'value']],
+                df.loc[[df[(df['room'] == room) & (df['key'] == 'humidity')]['value'].idxmin()]][['timestamp', 'value']]]
             )
             stats['stat'] = ['Max temp', 'Min temp', 'Max humidity', 'Min humidity']
             st.write(stats[
                          ['stat', 'timestamp', 'value']
                      ].reset_index().drop(columns=['index']).set_index('stat'))
+    else:
+        "There's no data yet! : D"
 
+
+if len(df) == 0:
+    st.error('Error: No data available for selected dates.')
+else:
+    with tab1:
+        show_data("basement")
     with tab2:
-        "There's no data yet! : D"
+        show_data("main floor")
     with tab3:
-        "There's no data yet! : D"
+        show_data("attic")
+
