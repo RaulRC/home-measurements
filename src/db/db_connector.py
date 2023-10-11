@@ -27,7 +27,6 @@ class DB:
             "INSERT INTO measurements (key, value, place, room, timestamp) "
             "VALUES (%s, %s, %s, %s, %s)"
         )
-        import pdb; pdb.set_trace()
         insert_data = (data.key, data.value, data.place, data.room, data.timestamp)
         self._store(insert_query, insert_data)
 

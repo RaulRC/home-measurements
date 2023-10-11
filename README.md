@@ -11,6 +11,8 @@ docker run -d --name meas-api -p 8000:8000 \
  measurements-api:latest
 ```
 
+# MySQL
+
 ```commandline
 docker run --name mysql-home-iot -p 3306:3306 \
  -e MYSQL_ROOT_PASSWORD=<password> \
@@ -19,4 +21,10 @@ docker run --name mysql-home-iot -p 3306:3306 \
  -e MYSQL_PASSWORD=<password> \
  -d \
  mysql:latest
+```
+
+# PG
+
+```commandline
+docker run -p 5432:5432 --name home-iot-pg -e POSTGRES_PASSWORD=<your_password> -e POSTGRES_USER=<your_user> -d postgres:latest
 ```
