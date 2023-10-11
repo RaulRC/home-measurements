@@ -26,9 +26,10 @@ st.subheader("Temperature and humidity")
 
 measurements = db.get_measurements()
 
-MAIN_COLS = ['timestamp', 'temperature', 'humidity', ]
+MAIN_COLS = ['timestamp', 'key', 'value', ]
 
-df = pd.DataFrame(measurements, columns=['id', 'place', 'room', 'timestamp', 'temperature', 'humidity', 'created_at'])
+df = pd.DataFrame(measurements, columns=['id', 'place', 'room', 'timestamp', 'key', 'value', 'created_at'])
+
 
 tab1, tab2, tab3 = st.tabs(['Basement', 'Main floor', 'Attic'])
 
@@ -39,24 +40,30 @@ def get_random_colors():
     return COLOR
 
 
-def plot_ts_value(df, value='temperature', func=px.line):
-    if type(value) == str:
-        fig = func(df, x='timestamp', y=value, color='room', title=value, color_discrete_sequence=get_random_colors())
-    elif type(value) == list:
-        fig = func(df, x='timestamp', y=df[value], color='room', title=value,
+def plot_ts_value(df, key='temp', func=px.line):
+    if type(key) == str:
+        fig = func(df[df['key'] == key],
+                   x='timestamp',
+                   y='value',
+                   color='room',
+                   title=key,
                    color_discrete_sequence=get_random_colors())
 
     for line in df[(df['timestamp'].dt.hour == 0) & (df['timestamp'].dt.minute == 0)].index:
         fig.add_vline(x=df.loc[line]['timestamp'], line_width=1, line_dash="dash", line_color="green")
 
-    if value == 'temperature':
+    if key == 'temp':
         fig.update_layout(yaxis_range=[15, 35])
     fig.update_layout(autosize=True)
     return fig
 
 
-def plot_box_value(df, value='temperature'):
-    fig = px.box(df, color='room', y=value, title=value, color_discrete_sequence=get_random_colors())
+def plot_box_value(df, key='temp'):
+    fig = px.box(df[df['key'] == key],
+                 color='room',
+                 y='value',
+                 title=key,
+                 color_discrete_sequence=get_random_colors())
     fig.update_layout(autosize=True)
     return fig
 
@@ -80,10 +87,10 @@ if len(df) == 0:
 else:
     with tab1:
         st.subheader("Basement")
-
         fig = func(df.reset_index(),
                    x='timestamp',
-                   y=["humidity", "temperature"],
+                   y='value',
+                   color = 'key',
                    color_discrete_sequence=get_random_colors(),
                    )
         # Plot vertical lines in 00:00 hours
@@ -104,27 +111,29 @@ else:
         col1, col2 = st.columns(2)
         with col1:
             st.plotly_chart(plot_ts_value(df[df['room'] == 'basement'].sort_values(by='timestamp'),
-                                          value='humidity',
+                                          key='humidity',
                                           func=func))
-            st.plotly_chart(plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), value='humidity'))
+            #st.plotly_chart(plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), key='humidity'))
             st.subheader("Last 60 measurements")
             st.write(df.tail(60).reset_index()[MAIN_COLS])
         with col2:
             st.plotly_chart(plot_ts_value(df[df['room'] == 'basement'].sort_values(by='timestamp'),
-                                          value='temperature',
+                                          key='temp',
                                           func=func))
-            st.plotly_chart(
-                plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), value='temperature'))
+
+            st.plotly_chart(plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), key='temp'))
+            st.plotly_chart(plot_box_value(df[df['room'] == 'basement'].sort_values(by='timestamp'), key='humidity'))
+
             st.subheader(f"Stats")
             stats = pd.concat([
-                df.loc[[df['temperature'].idxmax()]][['timestamp', 'temperature', 'humidity']],
-                df.loc[[df['temperature'].idxmin()]][['timestamp', 'temperature', 'humidity']],
-                df.loc[[df['humidity'].idxmax()]][['timestamp', 'temperature', 'humidity']],
-                df.loc[[df['humidity'].idxmin()]][['timestamp', 'temperature', 'humidity']]]
+                df.loc[[df[df['key'] == 'temp']['value'].idxmax()]][['timestamp', 'value']],
+                df.loc[[df[df['key'] == 'temp']['value'].idxmin()]][['timestamp', 'value']],
+                df.loc[[df[df['key'] == 'humidity']['value'].idxmax()]][['timestamp', 'value']],
+                df.loc[[df[df['key'] == 'humidity']['value'].idxmin()]][['timestamp', 'value']]]
             )
             stats['stat'] = ['Max temp', 'Min temp', 'Max humidity', 'Min humidity']
             st.write(stats[
-                         ['stat', 'timestamp', 'temperature', 'humidity']
+                         ['stat', 'timestamp', 'value']
                      ].reset_index().drop(columns=['index']).set_index('stat'))
 
     with tab2:
