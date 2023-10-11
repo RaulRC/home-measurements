@@ -7,3 +7,14 @@ CREATE TABLE IF NOT EXISTS measurements (
     humidity FLOAT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )  ENGINE=INNODB;
+
+-- PG
+CREATE TABLE IF NOT EXISTS measurements (
+    id SERIAL,
+    place VARCHAR(255) NOT NULL,
+    room VARCHAR(255) NOT NULL,
+    timestamp TIMESTAMP,
+    key VARCHAR(255),
+    value FLOAT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
