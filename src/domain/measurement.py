@@ -3,8 +3,8 @@ from datetime import datetime
 
 
 class Measurement(BaseModel):
-    temperature: float
-    humidity: float
+    key: str
+    value: float
     place: str
     room: str
     timestamp: datetime

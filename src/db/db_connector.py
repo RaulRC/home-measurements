@@ -1,12 +1,13 @@
 from datetime import datetime
-import mysql.connector
+import psycopg
 import os
-# MySQL configuration
+
 db_config = {
     "host": os.environ['DB_HOST'],
     "user": os.environ['DB_USER'],
     "password": os.environ['DB_PASSWORD'],
-    "database": os.environ['DB_NAME'],
+    "dbname": os.environ['DB_NAME'],
+    "port": os.environ['DB_PORT']
 }
 
 
@@ -21,15 +22,17 @@ class DB:
 
     def store_measurement(self, data):
         # Insert data into the database
+
         insert_query = (
-            "INSERT INTO measurements (temperature, humidity, place, room, timestamp) "
+            "INSERT INTO measurements (key, value, place, room, timestamp) "
             "VALUES (%s, %s, %s, %s, %s)"
         )
-        insert_data = (data.temperature, data.humidity, data.place, data.room, data.timestamp)
+        import pdb; pdb.set_trace()
+        insert_data = (data.key, data.value, data.place, data.room, data.timestamp)
         self._store(insert_query, insert_data)
 
     def _connect(self):
-        self.db = mysql.connector.connect(**db_config)
+        self.db = psycopg.connect(**db_config)
 
     def _store(self, query, data):
         cursor = self.db.cursor()
