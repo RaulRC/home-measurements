@@ -33,13 +33,14 @@ def main():
    print ('Iniciando...')
    buff = list()
    while True:
-       try:
-           RH, T = getSensorData()
-           measures = dict()
-           measures['temp'] = str(round(float(T), 2))
-           measures['humidity'] = str(round(float(RH), 2))
-           timestamp = str(datetime.datetime.now())
-           for key in ['temp', 'humidity']:
+
+       RH, T = getSensorData()
+       measures = dict()
+       measures['temp'] = str(round(float(T), 2))
+       measures['humidity'] = str(round(float(RH), 2))
+       timestamp = str(datetime.datetime.now())
+       for key in ['temp', 'humidity']:
+           try:
               pl = dict()
               pl['key'] = key
               pl['value'] = measures[key]
@@ -53,12 +54,12 @@ def main():
                     buff = empty_buffer(buff)
               else:
                  print("Buffering...", pl, len(buff))
-                 buff.append(pl)           
-       except Exception as e:
-           print ('Terminado.' + str(e))
-           buff.append(pl)           
-       finally:
-          time.sleep(60)
+                 buff.append(pl)
+           except Exception as e:
+               print ('Terminado.' + str(e))
+               buff.append(pl)
+           finally:
+              time.sleep(60)
 
 if __name__ == '__main__':
    main()
