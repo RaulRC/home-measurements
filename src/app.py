@@ -111,16 +111,16 @@ def show_data(room):
             st.plotly_chart(plot_ts_value(df[df['room'] == room].sort_values(by='timestamp'),
                                           key='humidity',
                                           func=func))
-
-            st.subheader("Last 60 measurements")
-            st.write(df[df['room'] == room].sort_values(by='timestamp').tail(60).reset_index()[MAIN_COLS])
-        with col2:
             st.plotly_chart(plot_ts_value(df[df['room'] == room].sort_values(by='timestamp'),
                                           key='temp',
                                           func=func))
+            st.subheader("Last 60 measurements")
+            st.write(df[df['room'] == room].sort_values(by='timestamp').tail(60).reset_index()[MAIN_COLS])
+        with col2:
 
-            st.plotly_chart(plot_box_value(df[df['room'] == room].sort_values(by='timestamp'), key='temp'))
             st.plotly_chart(plot_box_value(df[df['room'] == room].sort_values(by='timestamp'), key='humidity'))
+            st.plotly_chart(plot_box_value(df[df['room'] == room].sort_values(by='timestamp'), key='temp'))
+
 
             st.subheader(f"Stats")
             stats = pd.concat([
