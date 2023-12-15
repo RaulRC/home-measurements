@@ -81,9 +81,11 @@ def send_aqi_data():
          try:
             data = file.read()
             # Send the data as a request
-            send_request(data)
+            result = send_request(data)
             print(f"Sent request for file: {filename}")
-            os.remove(file_path)
+
+            if result == 200:
+               os.remove(file_path)
          except Exception as e:
             print(f"Failed to send request for file: {filename}")
             print(str(e))
