@@ -13,6 +13,7 @@ import requests
 import time, struct
 import sys
 import os
+import json
 
 
 
@@ -78,8 +79,9 @@ def send_aqi_data():
    for filename in os.listdir(AQI_FOLDER):
       file_path = os.path.join(AQI_FOLDER, filename)
       with open(file_path, 'r') as file:
+
          try:
-            data = file.read()
+            data = json.loads(file.read())
             # Send the data as a request
             result = send_request(data)
             print(f"Sent request for file: {filename}")
