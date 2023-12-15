@@ -73,6 +73,8 @@ def main():
                     with open(f"{PATH}{timestamp}-{item}.json", 'w') as fp:
                         json.dump(result, fp)
                         print(result)
+                        # sleep 60 seconds
+                        time.sleep(60)
 
 if __name__ == "__main__":
     main()
