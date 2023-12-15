@@ -12,6 +12,9 @@ import argparse
 parser = argparse.ArgumentParser(description='AQI measurement script')
 parser.add_argument('--path', type=str, default="/home/pi/measurements/", help='Path to save measurement files')
 parser.add_argument('--port', type=str, default="/dev/ttyUSB0", help='Serial port')
+parser.add_argument('--place', type=str, default="whitehouse", help='Serial port')
+parser.add_argument('--room', type=str, default="main floor", help='Serial port')
+
 parser.add_argument('--baudrate', type=int, default=9600, help='Baudrate')
 args = parser.parse_args()
 
@@ -64,6 +67,9 @@ def main():
                     result['timestamp'] = timestamp
                     result['key'] = item
                     result['value'] = value
+                    result['place'] = args.place
+                    result['room'] = args.room
+                    
                     with open(f"{PATH}{timestamp}-{item}.json", 'w') as fp:
                         json.dump(result, fp)
                         print(result)
