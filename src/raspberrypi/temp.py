@@ -86,7 +86,7 @@ def send_aqi_data():
          if result == 200:
             ff.close()
             os.remove(file_path)
-            print(f"Sent request for file: {filename}")
+            print(f"[{result}] AQI: {filename} -> {data}")
       except Exception as e:
          print(f"Failed to send request for file: {filename}")
          print(str(e))
