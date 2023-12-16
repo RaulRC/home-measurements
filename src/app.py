@@ -27,6 +27,7 @@ st.subheader("Temperature and humidity")
 measurements = db.get_measurements()
 
 MAIN_COLS = ['timestamp', 'key', 'value', ]
+METRICS = ['temp', 'humidity', 'pm_10', 'pm_25',]
 
 df = pd.DataFrame(measurements, columns=['id', 'place', 'room', 'timestamp', 'key', 'value', 'created_at'])
 
@@ -40,7 +41,7 @@ def get_random_colors():
     return COLOR
 
 
-def plot_ts_value(df, key='temp', func=px.line):
+def plot_ts_value(df, key='temp', max_value = None, func=px.line):
     if type(key) == str:
         fig = func(df[df['key'] == key],
                    x='timestamp',
@@ -51,6 +52,10 @@ def plot_ts_value(df, key='temp', func=px.line):
 
     for line in df[(df['timestamp'].dt.hour == 0) & (df['timestamp'].dt.minute == 0)].index:
         fig.add_vline(x=df.loc[line]['timestamp'], line_width=1, line_dash="dash", line_color="green")
+    if max_value:
+        fig.update_layout(yaxis_range=[0, max_value + max_value * 0.1])
+        # Add horizontal line with max value
+        fig.add_hline(y=max_value, line_width=1, line_dash="dash", line_color="red")
 
     if key == 'temp':
         fig.update_layout(yaxis_range=[15, 35])
@@ -84,7 +89,17 @@ df = df[(df['timestamp'].dt.date >= init_date) & (df['timestamp'].dt.date < end_
 
 def show_data(room):
     st.subheader(room.capitalize())
+    # Show the last measurements for every key in big text
     if df[df['room'] == room].shape[0] > 0:
+        cols = st.columns(len(METRICS))
+        for i, met in enumerate(METRICS):
+            cols[i].metric(label=met,
+                       value=df[df['room'] == room].loc[df[df['room'] == room]['key'] == met]['value'].iloc[-1],
+                       delta=round((df[df['room'] == room].loc[df[df['room'] == room]['key'] == met]['value'].iloc[-1] -
+                                df[df['room'] == room].loc[df[df['room'] == room]['key'] == met]['value'].iloc[-2]), 2)
+                       )
+        
+
         fig = func(df[df['room'] == room].reset_index(),
                    x='timestamp',
                    y='value',
@@ -108,19 +123,31 @@ def show_data(room):
 
         col1, col2 = st.columns(2)
         with col1:
+
             st.plotly_chart(plot_ts_value(df[df['room'] == room].sort_values(by='timestamp'),
                                           key='humidity',
                                           func=func))
             st.plotly_chart(plot_ts_value(df[df['room'] == room].sort_values(by='timestamp'),
                                           key='temp',
                                           func=func))
+            st.plotly_chart(plot_ts_value(df[df['room'] == room].sort_values(by='timestamp'),
+                                          key='pm_10',
+                                          max_value = 40,
+                                          func=func))
+            st.plotly_chart(plot_ts_value(df[df['room'] == room].sort_values(by='timestamp'),
+                                          key='pm_25',
+                                          max_value = 20,
+                                          func=func))
+
+
             st.subheader("Last 60 measurements")
             st.write(df[df['room'] == room].sort_values(by='timestamp').tail(60).reset_index()[MAIN_COLS])
         with col2:
 
             st.plotly_chart(plot_box_value(df[df['room'] == room].sort_values(by='timestamp'), key='humidity'))
             st.plotly_chart(plot_box_value(df[df['room'] == room].sort_values(by='timestamp'), key='temp'))
-
+            st.plotly_chart(plot_box_value(df[df['room'] == room].sort_values(by='timestamp'), key='pm_10'))
+            st.plotly_chart(plot_box_value(df[df['room'] == room].sort_values(by='timestamp'), key='pm_25'))
 
             st.subheader(f"Stats")
             stats = pd.concat([
@@ -141,9 +168,9 @@ if len(df) == 0:
     st.error('Error: No data available for selected dates.')
 else:
     with tab1:
-        show_data("basement")
-    with tab2:
         show_data("main floor")
+    with tab2:
+        show_data("basement")
     with tab3:
         show_data("attic")
 
