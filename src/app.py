@@ -31,8 +31,9 @@ METRICS = ['temp', 'humidity', 'pm_10', 'pm_25',]
 
 df = pd.DataFrame(measurements, columns=['id', 'place', 'room', 'timestamp', 'key', 'value', 'created_at'])
 
+TABS = ['Main floor', 'Basement', 'Attic']
 
-tab1, tab2, tab3 = st.tabs(['Basement', 'Main floor', 'Attic'])
+tab1, tab2, tab3 = st.tabs(TABS)
 
 
 def get_random_colors():
@@ -98,6 +99,12 @@ def show_data(room):
                        delta=round((df[df['room'] == room].loc[df[df['room'] == room]['key'] == met]['value'].iloc[-1] -
                                 df[df['room'] == room].loc[df[df['room'] == room]['key'] == met]['value'].iloc[-2]), 2)
                        )
+            cols[i].metric(label=f'Max {met}',
+                          value=df[df['room'] == room].loc[df[df['room'] == room]['key'] == met]['value'].max(),
+                           )
+            cols[i].metric(label=f'Min {met}',
+                            value=df[df['room'] == room].loc[df[df['room'] == room]['key'] == met]['value'].min(),
+                            )
         
 
         fig = func(df[df['room'] == room].reset_index(),
@@ -148,29 +155,19 @@ def show_data(room):
             st.plotly_chart(plot_box_value(df[df['room'] == room].sort_values(by='timestamp'), key='temp'))
             st.plotly_chart(plot_box_value(df[df['room'] == room].sort_values(by='timestamp'), key='pm_10'))
             st.plotly_chart(plot_box_value(df[df['room'] == room].sort_values(by='timestamp'), key='pm_25'))
-
-            st.subheader(f"Stats")
-            stats = pd.concat([
-                df.loc[[df[(df['room'] == room) & (df['key'] == 'temp')]['value'].idxmax()]][['timestamp', 'value']],
-                df.loc[[df[(df['room'] == room) & (df['key'] == 'temp')]['value'].idxmin()]][['timestamp', 'value']],
-                df.loc[[df[(df['room'] == room) & (df['key'] == 'humidity')]['value'].idxmax()]][['timestamp', 'value']],
-                df.loc[[df[(df['room'] == room) & (df['key'] == 'humidity')]['value'].idxmin()]][['timestamp', 'value']]]
-            )
-            stats['stat'] = ['Max temp', 'Min temp', 'Max humidity', 'Min humidity']
-            st.write(stats[
-                         ['stat', 'timestamp', 'value']
-                     ].reset_index().drop(columns=['index']).set_index('stat'))
     else:
         "There's no data yet! : D"
+    
+
 
 
 if len(df) == 0:
     st.error('Error: No data available for selected dates.')
 else:
     with tab1:
-        show_data("main floor")
+        show_data(TABS[0].lower())
     with tab2:
-        show_data("basement")
+        show_data(TABS[1].lower())
     with tab3:
-        show_data("attic")
+        show_data(TABS[2].lower())
 
