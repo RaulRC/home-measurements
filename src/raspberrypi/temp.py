@@ -78,19 +78,19 @@ def send_aqi_data():
    """
    for filename in os.listdir(AQI_FOLDER):
       file_path = os.path.join(AQI_FOLDER, filename)
-      with open(file_path, 'r') as file:
-
-         try:
-            data = json.loads(file.read())
-            # Send the data as a request
-            result = send_request(data)
+      ff = open(file_path, 'r')
+      try:
+         data = json.loads(ff.read())
+         # Send the data as a request
+         result = send_request(data)
+         if result == 200:
+            ff.close()
+            os.remove(file_path)
             print(f"Sent request for file: {filename}")
-
-            if result == 200:
-               os.remove(file_path)
-         except Exception as e:
-            print(f"Failed to send request for file: {filename}")
-            print(str(e))
+      except Exception as e:
+         print(f"Failed to send request for file: {filename}")
+         print(str(e))
+   return
 
 
 def main():
