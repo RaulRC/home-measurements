@@ -54,7 +54,7 @@ def plot_ts_value(df, key='temp', max_value = None, func=px.line):
     for line in df[(df['timestamp'].dt.hour == 0) & (df['timestamp'].dt.minute == 0)].index:
         fig.add_vline(x=df.loc[line]['timestamp'], line_width=1, line_dash="dash", line_color="green")
     if max_value:
-        fig.update_layout(yaxis_range=[0, max_value + max_value * 0.1])
+        fig.update_layout(yaxis_range=[0, max(max_value + max_value * 0.1, df[df['key'] == key]['value'].max())])
         # Add horizontal line with max value
         fig.add_hline(y=max_value, line_width=1, line_dash="dash", line_color="red")
 
